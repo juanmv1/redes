@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trazabilidad de exportaciones</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-top: 20px;
+        }
+        form#form {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px;
+        }
+        label {
+            margin-right: 5px;
+        }
+        select, input[type="text"] {
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        div {
+            margin: 20px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        iframe {
+            display: block;
+            margin: 0 auto;
+        }
+        #resultado {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #eaf2f8;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Trazabilidad de exportaciones</h1>
+    <form id="form">
+        <label for="selector1">Seleccione Origen:</label>
+        <select id="selector1"></select>
+
+        <label for="selector2">Seleccione Destino:</label>
+        <select id="selector2"></select>
+
+        <button type="button" onclick="ejecutarPython()">Ir</button>
+    </form>
+
+    <div>
+        <iframe src="rutas_alternativas.html" width="1200" height="1000" style="border:none;"></iframe>
+    </div>
+
+    <div id="Metadata">
+        <h2>Metadata</h2>
+        <label for="label1">Id Nave:</label>
+        <input type="text" id="input1" />
+        <button type="button" onclick="ejecutarAmenazaInput('input1')">Obtener Ficha</button>
+
+        <label for="label2">Id Nave:</label>
+        <input type="text" id="input2" />
+        <button type="button" onclick="ejecutarAmenazaInput('input2')">Obtener ubicación</button>
+
+        <button type="button" onclick="ejecutarAmenaza('comando3')">Mostrar naves recalando</button>
+        <button type="button" onclick="ejecutarAmenaza('comando4')">Mostrar estado San Antonio</button>
+    </div>
+
+    <div id="Amenazas">
+        <h2>Amenazas</h2>
+        <button type="button" onclick="ejecutarOtraSeccion('comando5')">Clima San Antonio</button>
+        <button type="button" onclick="ejecutarOtraSeccion('comando6')">Sismos en San Antonio</button>
+        <button type="button" onclick="ejecutarOtraSeccion('comando7')">Oleaje en San Antonio</button>
+    </div>
+
+    <div id="resultado"></div>
+
+    <script>
+        let opciones = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar los datos del archivo Excel
+            const filePath = 'data/tablas_de_codigos.xlsx';
+            fetch(filePath).then(response => response.arrayBuffer()).then(data => {
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                cargarOpciones(jsonData);
+            });
+        });
+
+        function cargarOpciones(data) {
+            const selector1 = document.getElementById('selector1');
+            const selector2 = document.getElementById('selector2');
+
+            // Tomar solo la columna B (índice 1) y omitir el primer elemento
+            opciones = data.slice(1).map(row => ({ id: row[0], valor: row[1] })).filter(row => row.valor !== undefined);
+
+            opciones.forEach(opcion => {
+                const option1 = document.createElement('option');
+                option1.value = opcion.id;
+                option1.text = opcion.valor;
+                selector1.appendChild(option1);
+
+                const option2 = document.createElement('option');
+                option2.value = opcion.id;
+                option2.text = opcion.valor;
+                selector2.appendChild(option2);
+            });
+        }
+
+        function ejecutarPython() {
+            const id1 = document.getElementById('selector1').value;
+            const id2 = document.getElementById('selector2').value;
+            const comando = `python main.py ${id1} ${id2}`;
+            console.log('Ejecutando comando:', comando);
+            // Implementa la ejecución del comando en el servidor
+        }
+
+        function ejecutarAmenazaInput(inputId) {
+            const valor = document.getElementById(inputId).value;
+            const comando = `python programa.py ${valor}`;
+            console.log('Ejecutando comando:', comando);
+            setTimeout(() => {
+                document.getElementById('resultado').innerHTML += `<div>Resultado de ${comando} cargado.</div>`;
+            }, 5000);
+        }
+
+        function ejecutarAmenaza(comando) {
+            console.log('Ejecutando comando:', comando);
+            setTimeout(() => {
+                document.getElementById('resultado').innerHTML += `<div>Resultado de ${comando} cargado.</div>`;
+            }, 5000);
+        }
+
+        function ejecutarOtraSeccion(comando) {
+            console.log('Ejecutando comando:', comando);
+            setTimeout(() => {
+                document.getElementById('resultado').innerHTML += `<div>Resultado de ${comando} cargado.</div>`;
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
